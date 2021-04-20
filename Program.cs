@@ -1,6 +1,7 @@
 ﻿
 using Opc.Ua.Configuration;
 using System;
+using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -47,6 +48,7 @@ namespace Opc.Ua.Sample.Simulation
 
     public class Program
     {
+        public static string defaultNodeset = "Station.NodeSet2.xml";
         public static void Main(string[] args)
         {
             try
@@ -71,6 +73,34 @@ namespace Opc.Ua.Sample.Simulation
 
             // check the application certificate.
             await application.CheckApplicationInstanceCertificate(false, 0).ConfigureAwait(false);
+            
+            // figure out which nodeset file to use
+            if (args.Length == 0)
+            {
+                // no arguments specified, use default
+                Console.WriteLine("Using default Nodeset file: " + defaultNodeset);
+                config.ApplicationUri = Path.Combine(Environment.CurrentDirectory, defaultNodeset); //Some place to stick an argument, there's probably a better way to do this
+            }
+            else
+            {
+                if (File.Exists(args[0]))   // relative path in argument
+                {
+                    Console.WriteLine("Using Nodeset file: " + args[0]);
+                    config.ApplicationUri = args[0]; //Some place to stick an argument, there's probably a better way to do this
+                }
+                else  // absolute path in argumment
+                {   
+                    if (File.Exists(Path.Combine(Environment.CurrentDirectory, args[0])))
+                    {
+                        Console.WriteLine("Using Nodeset file: " + Path.Combine(Environment.CurrentDirectory, args[0]));
+                        config.ApplicationUri = Path.Combine(Environment.CurrentDirectory, args[0]); //Some place to stick an argument, there's probably a better way to do this
+                    } else
+                    {
+                        Console.WriteLine("Provided NodeSet argument not found in the file system.");
+                        Console.WriteLine("Ensure the path exists and try again!");
+                    }
+                }
+            }
 
             // create cert validator
             config.CertificateValidator = new CertificateValidator();

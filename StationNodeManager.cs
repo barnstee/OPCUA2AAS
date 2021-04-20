@@ -46,11 +46,13 @@ namespace Opc.Ua.Sample
         private NodeId m_OverallRunningTimeID;
         private NodeId m_PressureID;
         private NodeId m_StatusID;
+        private ApplicationConfiguration m_Configuration;
 
         public StationNodeManager(IServerInternal server, ApplicationConfiguration configuration)
         : base(server, configuration)
         {
             SystemContext.NodeIdFactory = this;
+            m_Configuration = configuration;
 
             List<string> namespaceUris = new List<string>();
             namespaceUris.Add("http://opcfoundation.org/UA/Station/");
@@ -115,8 +117,8 @@ namespace Opc.Ua.Sample
                 {
                     externalReferences[ObjectIds.ObjectsFolder] = references = new List<IReference>();
                 }
-
-                ImportNodeset2Xml(externalReferences, "Station.NodeSet2.xml");
+                
+                ImportNodeset2Xml(externalReferences, m_Configuration.ApplicationUri);  //Use passed NodeSet file, instead of hard coded
 
                 FolderState root = CreateFolder(null, "AssetAdminShell", "AssetAdminShell");
                 root.AddReference(ReferenceTypes.Organizes, true, ObjectIds.ObjectsFolder);
@@ -208,7 +210,13 @@ namespace Opc.Ua.Sample
 
             for (int i = 0; i < predefinedNodes.Count; i++)
             {
-                AddPredefinedNode(SystemContext, predefinedNodes[i]);
+                try { 
+                    AddPredefinedNode(SystemContext, predefinedNodes[i]);
+                } catch(Exception ex)
+                {
+                    Console.WriteLine("Error adding node to nodeset: " + ex.Message);
+                    Console.WriteLine("Trying to continue...");
+                }
             }
         }
 
